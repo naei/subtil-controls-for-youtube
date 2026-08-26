@@ -1,0 +1,269 @@
+:root[data-ynv-mode="audio"],
+:root[data-ynv-mode="restoring"] {
+  --ynv-accent: #ff244b;
+}
+
+.ynv-player-host {
+  position: relative !important;
+}
+
+.ynv-original-player--hidden {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#ynv-audio-player.ynv-audio-player {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 3 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+  background: #080808;
+  visibility: visible;
+}
+
+#ynv-audio-player.ynv-audio-player--pending {
+  visibility: hidden !important;
+}
+
+#ynv-audio-player audio.video-stream,
+#ynv-audio-player audio.html5-main-video {
+  opacity: 0 !important;
+}
+
+/* The detached audio player cannot keep the page URL in sync with its own
+   "next" action, so navigation stays on the surrounding YouTube page. */
+#ynv-audio-player .ytp-next-button,
+#ynv-audio-player .ytp-autonav-toggle-button-container,
+#ynv-audio-player .ytp-miniplayer-button,
+#ynv-audio-player .ytp-pip-button {
+  display: none !important;
+}
+
+.ynv-toggle-button {
+  position: relative;
+  flex: 0 0 48px !important;
+  width: 48px !important;
+  color: #fff;
+  opacity: 0.9;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.ynv-toggle-button:hover {
+  opacity: 1;
+}
+
+.ynv-toggle-button:active {
+  transform: scale(0.92);
+}
+
+.ynv-toggle-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -5px;
+  border-radius: 7px;
+}
+
+.ynv-toggle-button:disabled {
+  cursor: progress;
+  opacity: 0.52;
+}
+
+.ynv-toggle-button svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 9px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+}
+
+.ynv-toggle-button .ynv-icon-slash {
+  stroke: #ff244b;
+  stroke-width: 3.1;
+}
+
+.ynv-toggle-button--active::after {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff244b;
+  box-shadow: 0 0 0 2px rgba(15, 15, 15, 0.8);
+  content: "";
+}
+
+.ynv-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(42, 42, 42, 0.48), transparent 38%),
+    #080808;
+  animation: ynv-preview-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ynv-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.7;
+  filter: saturate(0.78) brightness(0.68);
+  transform: scale(1.005);
+}
+
+.ynv-preview__image--unavailable {
+  display: none;
+}
+
+.ynv-preview__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16), transparent 35%, rgba(0, 0, 0, 0.38)),
+    radial-gradient(circle at center, transparent 0 18%, rgba(0, 0, 0, 0.18) 68%, rgba(0, 0, 0, 0.4));
+}
+
+.ynv-preview__badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  color: #fff;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
+}
+
+.ynv-preview__badge svg {
+  width: clamp(66px, 8.5vw, 104px);
+  height: clamp(66px, 8.5vw, 104px);
+  box-sizing: border-box;
+  padding: 21%;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
+  background: rgba(10, 10, 10, 0.76);
+  box-shadow:
+    0 12px 42px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.ynv-preview__badge .ynv-icon-slash {
+  stroke: #ff244b;
+  stroke-width: 3.1;
+}
+
+.ynv-preview__badge span {
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.94);
+  font-family: "YouTube Sans", Roboto, sans-serif;
+  font-size: clamp(11px, 1.25vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.ynv-toast {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  z-index: 80;
+  max-width: min(520px, calc(100% - 32px));
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  color: #fff;
+  font-family: "YouTube Sans", Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(22, 22, 22, 0.94);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  transform: translate(-50%, 8px);
+  transition: opacity 160ms ease, transform 180ms ease;
+  backdrop-filter: blur(12px);
+}
+
+.ynv-toast--error {
+  border-color: rgba(255, 74, 104, 0.45);
+}
+
+.ynv-toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.ynv-sr-only {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@keyframes ynv-preview-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 650px) {
+  .ynv-preview__badge span {
+    display: none;
+  }
+
+  .ynv-preview__badge svg {
+    width: 62px;
+    height: 62px;
+  }
+
+  .ynv-toast {
+    bottom: 58px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ynv-preview,
+  .ynv-toggle-button,
+  .ynv-toast {
+    animation: none !important;
+    transition: none !important;
+  }
+}

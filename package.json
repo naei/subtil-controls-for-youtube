@@ -1,0 +1,17 @@
+{
+  "name": "youtube-audio-only-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome extension that replaces the YouTube video pipeline with its audio-only player.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node scripts/check-extension.js && npm test",
+    "test:e2e": "node scripts/e2e-smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.51.1"
+  }
+}
