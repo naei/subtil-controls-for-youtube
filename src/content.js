@@ -227,8 +227,8 @@
       showToast('No separate audio stream is available for this video.', 'error');
       return;
     }
-    if (Core.isLiveContent(playerResponse)) {
-      showToast('YouTube live streams are not supported yet.', 'error');
+    if (Core.isActiveLiveContent(playerResponse)) {
+      showToast('Active YouTube live streams are not supported yet.', 'error');
       return;
     }
 

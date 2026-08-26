@@ -29,7 +29,7 @@ Chrome may temporarily retain previously received bytes in its HTTP cache or int
 
 - Chrome 111 or later.
 - On-demand videos on `youtube.com/watch` pages.
-- Live streams, Shorts, and ads are not switched to audio-only mode.
+- Completed live replays are supported. Active and upcoming live streams, Shorts, and ads are not switched to audio-only mode.
 - YouTube does not publicly document its audio-only player context. An internal player change may therefore require an extension update.
 - The Next button and autoplay are hidden in the standalone audio player to prevent the media from changing without a matching page URL update. YouTube links and recommendations remain available as usual.
 

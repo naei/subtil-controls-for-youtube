@@ -41,15 +41,35 @@ test('sorts thumbnails by area and removes duplicates', () => {
   );
 });
 
-test('detects adaptive audio streams and live content', () => {
+test('detects adaptive audio streams and distinguishes active live streams from replays', () => {
   assert.equal(Core.hasAudioRepresentation({
     streamingData: { adaptiveFormats: [{ mimeType: 'audio/webm; codecs="opus"' }] },
   }), true);
   assert.equal(Core.hasAudioRepresentation({
     streamingData: { adaptiveFormats: [{ mimeType: 'video/webm; codecs="vp9"' }] },
   }), false);
-  assert.equal(Core.isLiveContent({ videoDetails: { isLiveContent: true } }), true);
-  assert.equal(Core.isLiveContent({ videoDetails: { isLiveContent: false } }), false);
+  assert.equal(Core.isActiveLiveContent({ videoDetails: { isLive: true } }), true);
+  assert.equal(Core.isActiveLiveContent({ videoDetails: { isUpcoming: true } }), true);
+  assert.equal(Core.isActiveLiveContent({
+    videoDetails: { isLiveContent: true, lengthSeconds: '0' },
+    microformat: {
+      playerMicroformatRenderer: {
+        liveBroadcastDetails: { isLiveNow: true },
+      },
+    },
+  }), true);
+  assert.equal(Core.isActiveLiveContent({
+    videoDetails: { isLiveContent: true, lengthSeconds: '798' },
+    microformat: {
+      playerMicroformatRenderer: {
+        liveBroadcastDetails: {
+          isLiveNow: false,
+          endTimestamp: '2026-08-26T18:46:08+00:00',
+        },
+      },
+    },
+  }), false);
+  assert.equal(Core.isActiveLiveContent({ videoDetails: { isLiveContent: false } }), false);
 });
 
 test('builds audio arguments without modifying the source configuration', () => {

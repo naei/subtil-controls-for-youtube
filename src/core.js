@@ -109,14 +109,22 @@
       && formats.some((format) => typeof format.mimeType === 'string' && format.mimeType.startsWith('audio/'));
   }
 
-  function isLiveContent(playerResponse) {
+  function isActiveLiveContent(playerResponse) {
     if (!playerResponse) return false;
     const details = playerResponse.videoDetails || {};
     const microformat = playerResponse.microformat && playerResponse.microformat.playerMicroformatRenderer;
+    const liveDetails = (microformat && microformat.liveBroadcastDetails) || {};
+    const hasZeroDuration = Number(details.lengthSeconds) === 0;
+
     return Boolean(
-      details.isLiveContent
-      || details.isLive
-      || (microformat && (microformat.liveBroadcastDetails || microformat.isLiveBroadcast)),
+      details.isLive === true
+      || details.isUpcoming === true
+      || liveDetails.isLiveNow === true
+      || (
+        details.isLiveContent === true
+        && hasZeroDuration
+        && !liveDetails.endTimestamp
+      ),
     );
   }
 
@@ -198,7 +206,7 @@
     getVideoId,
     hasAudioRepresentation,
     isEditableTarget,
-    isLiveContent,
+    isActiveLiveContent,
     isSupportedWatchUrl,
     safeCall,
     snapshotPlayback,
