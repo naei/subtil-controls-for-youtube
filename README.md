@@ -49,6 +49,12 @@ After `npm install`, an end-to-end test using a real Chrome instance is also ava
 npm run test:e2e
 ```
 
+To validate the extension and create `youtube-audio-only.zip`:
+
+```bash
+npm run package
+```
+
 For a more detailed manual inspection:
 
 1. Open DevTools and select the **Media** panel, or open `chrome://media-internals`.
