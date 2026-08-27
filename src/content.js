@@ -67,6 +67,28 @@
     return svg;
   }
 
+  function createLoadingIcon() {
+    const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.classList.add('ynv-loading-icon');
+
+    const track = document.createElementNS(SVG_NAMESPACE, 'circle');
+    track.setAttribute('class', 'ynv-loading-icon__track');
+    track.setAttribute('cx', '12');
+    track.setAttribute('cy', '12');
+    track.setAttribute('r', '8.5');
+
+    const indicator = document.createElementNS(SVG_NAMESPACE, 'circle');
+    indicator.setAttribute('class', 'ynv-loading-icon__indicator');
+    indicator.setAttribute('cx', '12');
+    indicator.setAttribute('cy', '12');
+    indicator.setAttribute('r', '8.5');
+    svg.append(track, indicator);
+    return svg;
+  }
+
   function setDocumentMode(mode) {
     state.mode = mode;
     document.documentElement.setAttribute(MODE_ATTRIBUTE, mode);
@@ -162,21 +184,55 @@
     if (!button) return;
     const active = state.mode === 'audio' || state.mode === 'restoring';
     const busy = state.mode === 'enabling' || state.mode === 'restoring';
-    const label = active ? 'Restore video stream' : 'Turn off video stream';
+    const label = state.mode === 'enabling'
+      ? 'Starting audio-only mode'
+      : state.mode === 'restoring'
+        ? 'Restoring video stream'
+        : active
+          ? 'Restore video stream'
+          : 'Turn off video stream';
 
     button.classList.toggle('ynv-toggle-button--active', active);
     button.disabled = busy;
-    button.replaceChildren(createVideoIcon(active));
+    button.replaceChildren(busy ? createLoadingIcon() : createVideoIcon(active));
     button.setAttribute('aria-busy', String(busy));
     button.setAttribute('aria-label', label);
     button.setAttribute('aria-pressed', String(active));
-    button.title = `${label} (Maj+V)`;
+    button.title = busy ? label : `${label} (Shift+V)`;
   }
 
   function updateButtons() {
     for (const button of document.querySelectorAll(`[${BUTTON_ATTRIBUTE}]`)) {
       updateButton(button);
     }
+  }
+
+  function showActivationOverlay(player) {
+    const previous = player.querySelector('.ynv-loading-overlay');
+    if (previous) previous.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'ynv-loading-overlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.setAttribute('aria-label', 'Starting audio-only mode');
+
+    const status = document.createElement('div');
+    status.className = 'ynv-loading-overlay__status';
+    const label = document.createElement('span');
+    label.textContent = 'Starting audio-only mode…';
+    status.append(createLoadingIcon(), label);
+    overlay.appendChild(status);
+    overlay.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+    overlay.addEventListener('dblclick', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+    player.appendChild(overlay);
+    return overlay;
   }
 
   function reconcile() {
@@ -266,6 +322,7 @@
 
     const snapshot = Core.snapshotPlayback(originalPlayer, videoId);
     state.routeVideoId = videoId;
+    const activationOverlay = showActivationOverlay(originalPlayer);
     setDocumentMode('enabling');
 
     let audioRoot = null;
@@ -312,12 +369,14 @@
       const audioEngine = audioRoot.querySelector(`#${AUDIO_ENGINE_ID}`) || audioRoot;
       installPreview(audioEngine, playerResponse, videoId);
       ensureButton(audioRoot);
+      activationOverlay.remove();
       releaseOriginalVideo(originalPlayer);
       setOriginalPlayerHidden(originalPlayer, true);
       audioRoot.classList.remove('ynv-audio-player--pending');
       setDocumentMode('audio');
       announce('Video stream disabled. Audio-only playback enabled.');
     } catch (error) {
+      activationOverlay.remove();
       if (audioApp) disposeAudioApp(audioApp);
       if (audioRoot && audioRoot.isConnected) audioRoot.remove();
 

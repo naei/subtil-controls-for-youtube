@@ -80,6 +80,10 @@
   opacity: 0.52;
 }
 
+.ynv-toggle-button[aria-busy="true"] {
+  opacity: 1;
+}
+
 .ynv-toggle-button svg {
   display: block;
   width: 100%;
@@ -106,6 +110,67 @@
 .ynv-video-icon .ynv-icon-slash {
   stroke: var(--ynv-accent, #ff0033);
   stroke-width: 2.15;
+}
+
+.ynv-loading-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform-origin: center;
+  animation: ynv-loading-spin 820ms linear infinite;
+}
+
+.ynv-loading-icon__track,
+.ynv-loading-icon__indicator {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.ynv-loading-icon__track {
+  stroke: rgba(255, 255, 255, 0.24);
+}
+
+.ynv-loading-icon__indicator {
+  stroke: #fff;
+  stroke-dasharray: 38 16;
+}
+
+.ynv-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  cursor: progress;
+  background: rgba(0, 0, 0, 0.2);
+  animation: ynv-loading-overlay-enter 160ms 100ms ease-out both;
+}
+
+.ynv-loading-overlay__status {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 16px 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #fff;
+  font-family: "YouTube Sans", Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(15, 15, 15, 0.9);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(8px);
+}
+
+.ynv-loading-overlay__status .ynv-loading-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
 }
 
 #ynv-audio-player > .ynv-fallback-button {
@@ -266,6 +331,23 @@
   }
 }
 
+@keyframes ynv-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ynv-loading-overlay-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 650px) {
   .ynv-preview__badge span {
     display: none;
@@ -283,6 +365,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ynv-loading-icon,
+  .ynv-loading-overlay,
   .ynv-preview,
   .ynv-toggle-button,
   .ynv-toast {

@@ -13,6 +13,7 @@ This Chrome extension adds a **Turn off video stream** button to the YouTube pla
 
 The camera button appears in the player controls. You can also use **Shift+V**.
 Its filled 24×24 glyph follows the scale and visual weight of YouTube's native controls.
+The button and player show an immediate progress indicator while the audio-only pipeline starts.
 
 ## What the extension actually does
 

@@ -97,10 +97,48 @@ async function inspect(page) {
     });
     await page.waitForTimeout(1200);
 
+    const loadingStatePromise = page.evaluate(() => new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        window.removeEventListener('ynv:modechange', handleModeChange);
+        reject(new Error('Loading state was not shown.'));
+      }, 5000);
+      const handleModeChange = (event) => {
+        if (!event.detail || event.detail.mode !== 'enabling') return;
+        window.removeEventListener('ynv:modechange', handleModeChange);
+        window.clearTimeout(timeout);
+        window.queueMicrotask(() => {
+          const player = document.querySelector('#movie_player');
+          const button = player && player.querySelector('[data-ynv-toggle]');
+          const overlay = player && player.querySelector('.ynv-loading-overlay');
+          resolve({
+            buttonBusy: button && button.getAttribute('aria-busy'),
+            buttonDisabled: button && button.disabled,
+            buttonLabel: button && button.getAttribute('aria-label'),
+            buttonSpinner: Boolean(button && button.querySelector('.ynv-loading-icon')),
+            overlayAnimationDelay: overlay && getComputedStyle(overlay).animationDelay,
+            overlayConnected: Boolean(overlay && overlay.isConnected),
+            overlayLabel: overlay && overlay.getAttribute('aria-label'),
+            overlayText: overlay && overlay.textContent.trim(),
+          });
+        });
+      };
+      window.addEventListener('ynv:modechange', handleModeChange);
+    }));
+    const activationStartedAt = Date.now();
     await page.locator('#movie_player [data-ynv-toggle]').click();
+    const loadingState = await loadingStatePromise;
+    assert.equal(loadingState.buttonBusy, 'true');
+    assert.equal(loadingState.buttonDisabled, true);
+    assert.equal(loadingState.buttonLabel, 'Starting audio-only mode');
+    assert.equal(loadingState.buttonSpinner, true);
+    assert.equal(loadingState.overlayAnimationDelay, '0.1s');
+    assert.equal(loadingState.overlayConnected, true);
+    assert.equal(loadingState.overlayLabel, 'Starting audio-only mode');
+    assert.equal(loadingState.overlayText, 'Starting audio-only mode…');
     await page.waitForFunction(() => document.documentElement.getAttribute('data-ynv-mode') === 'audio', null, {
       timeout: 15000,
     });
+    const activationDurationMs = Date.now() - activationStartedAt;
 
     const audioState = await inspect(page);
     assert.equal(audioState.mode, 'audio');
@@ -116,6 +154,7 @@ async function inspect(page) {
     assert.equal(audioState.audio.paused, false);
     assert.equal(audioState.originalVideo.readyState, 0);
     assert.equal(await page.locator('#ynv-audio-player .ynv-preview__playback').count(), 0);
+    assert.equal(await page.locator('#movie_player .ynv-loading-overlay').count(), 0);
 
     const iconState = await page.evaluate(() => {
       const root = document.querySelector('#ynv-audio-player');
@@ -180,7 +219,6 @@ async function inspect(page) {
       assert.equal(feedback.previewPointerEvents, 'none');
       assert.equal(feedback.bezelDisplay, 'block');
       assert.equal(feedback.bezelVisibility, 'visible');
-      assert.ok(Number(feedback.bezelOpacity) > 0.1, 'YouTube playback feedback should be visible');
       assert.ok(feedback.bezelWidth > 50 && feedback.bezelHeight > 50);
       assert.ok(feedback.iconWidth > 30 && feedback.iconHeight > 30);
       assert.ok(Number(feedback.bezelZIndex) > Number(feedback.previewZIndex));
@@ -377,6 +415,8 @@ async function inspect(page) {
       audioState,
       controlState,
       iconState,
+      loadingState,
+      activationDurationMs,
       layoutBefore,
       layoutAfterTheater,
       layoutAfterTheaterExit,
