@@ -5,7 +5,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const projectRoot = path.resolve(__dirname, '..');
-const archiveName = 'youtube-audio-only.zip';
+const archiveName = 'subtil-controls-for-youtube.zip';
 const archivePath = path.join(projectRoot, archiveName);
 const extensionFiles = ['manifest.json', 'src', 'icons', 'README.md'];
 

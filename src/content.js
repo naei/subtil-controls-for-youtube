@@ -22,6 +22,8 @@
     audioApp: null,
     audioRoot: null,
     generation: 0,
+    loopVideoId: null,
+    loopMedia: null,
     mode: 'video',
     originalArgs: null,
     originalHost: null,
@@ -32,6 +34,8 @@
     routeVideoId: null,
     snapshot: null,
     toastTimer: 0,
+    tooltipButton: null,
+    tooltip: null,
   };
 
   setDocumentMode('video');
@@ -92,11 +96,13 @@
 
   function setDocumentMode(mode) {
     state.mode = mode;
+    syncLoop();
     document.documentElement.setAttribute(MODE_ATTRIBUTE, mode);
     window.dispatchEvent(new CustomEvent('ynv:modechange', {
       detail: { mode },
     }));
     updateButtons();
+    refreshControlTooltip();
   }
 
   function getOriginalPlayer() {
@@ -132,17 +138,125 @@
     }
   }
 
+  function frenchPlayer() {
+    return (document.documentElement.lang || navigator.language).toLowerCase().startsWith('fr');
+  }
+
+  function closeControlTooltip() {
+    state.tooltip?.remove();
+    state.tooltip = null;
+    state.tooltipButton = null;
+  }
+
+  function refreshControlTooltip() {
+    const { tooltip, tooltipButton: button } = state;
+    if (!tooltip) return;
+    const root = getActiveRoot();
+    if (!root?.contains(button) || button.disabled) {
+      closeControlTooltip();
+      return;
+    }
+
+    const label = button.hasAttribute('data-ynv-loop')
+      ? (state.loopVideoId
+        ? (frenchPlayer() ? 'Désactiver la lecture en boucle' : 'Turn off loop')
+        : (frenchPlayer() ? 'Activer la lecture en boucle' : 'Turn on loop'))
+      : button.getAttribute('aria-label');
+    if (tooltip.textContent !== label) tooltip.textContent = label;
+    const bounds = root.getBoundingClientRect();
+    const target = button.getBoundingClientRect();
+    const bar = button.closest('.ytp-chrome-bottom') || button;
+    const centered = target.left - bounds.left + (target.width - tooltip.offsetWidth) / 2;
+    tooltip.style.left = Math.max(4, Math.min(centered, bounds.width - tooltip.offsetWidth - 4)) + 'px';
+    tooltip.style.top = (bar.getBoundingClientRect().top - bounds.top - tooltip.offsetHeight - 11) + 'px';
+  }
+
+  function attachControlTooltip(button) {
+    function show() {
+      const root = getActiveRoot();
+      if (!root?.contains(button) || state.tooltipButton === button) return;
+      closeControlTooltip();
+      const tooltip = document.createElement('div');
+      tooltip.className = 'ynv-control-tooltip';
+      tooltip.setAttribute('aria-hidden', 'true');
+      root.appendChild(tooltip);
+      state.tooltip = tooltip;
+      state.tooltipButton = button;
+      refreshControlTooltip();
+    }
+    function hide() {
+      if (state.tooltipButton === button) closeControlTooltip();
+    }
+    button.addEventListener('mouseenter', show);
+    button.addEventListener('mouseleave', hide);
+    button.addEventListener('focus', () => {
+      if (button.matches(':focus-visible')) show();
+    });
+    button.addEventListener('blur', hide);
+  }
+
   function createToggleButton() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'ytp-button ynv-toggle-button';
     button.setAttribute(BUTTON_ATTRIBUTE, '');
+    button.setAttribute('aria-keyshortcuts', 'Shift+V');
+    attachControlTooltip(button);
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
       toggleMode();
     });
     updateButton(button);
+    return button;
+  }
+
+  function syncLoop() {
+    const videoId = Core.getVideoId(window.location.href);
+    if (state.loopVideoId !== videoId || !Core.isSupportedWatchUrl(window.location.href)) {
+      state.loopVideoId = null;
+    }
+    const root = getActiveRoot();
+    const media = state.loopVideoId && root && !isAdvertisement(root, videoId)
+      ? root.querySelector(root === state.audioRoot ? 'audio' : 'video')
+      : null;
+    if (state.loopMedia && state.loopMedia !== media) state.loopMedia.loop = false;
+    if (media) media.loop = true;
+    state.loopMedia = media;
+    for (const button of document.querySelectorAll('[data-ynv-loop]')) {
+      button.setAttribute('aria-pressed', String(Boolean(state.loopVideoId)));
+    }
+  }
+
+  function createLoopButton() {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ytp-button ynv-toggle-button';
+    button.setAttribute('data-ynv-loop', '');
+    button.setAttribute('aria-label', frenchPlayer() ? 'Lecture en boucle' : 'Loop current video');
+    attachControlTooltip(button);
+    button.setAttribute('aria-pressed', String(Boolean(state.loopVideoId)));
+
+    const icon = document.createElementNS(SVG_NAMESPACE, 'svg');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('aria-hidden', 'true');
+    const arrows = document.createElementNS(SVG_NAMESPACE, 'path');
+    arrows.setAttribute('d', 'M3 12v-1a4.5 4.5 0 0 1 4.5-4.5H20m-3.5-3.5L20 6.5 16.5 10M21 12v1a4.5 4.5 0 0 1-4.5 4.5H4m3.5 3.5L4 17.5 7.5 14');
+    arrows.setAttribute('fill', 'none');
+    arrows.setAttribute('stroke', 'currentColor');
+    arrows.setAttribute('stroke-width', '2.1');
+    arrows.setAttribute('stroke-linecap', 'round');
+    arrows.setAttribute('stroke-linejoin', 'round');
+    icon.appendChild(arrows);
+    button.appendChild(icon);
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const videoId = Core.getVideoId(window.location.href);
+      state.loopVideoId = state.loopVideoId === videoId ? null : videoId;
+      syncLoop();
+      refreshControlTooltip();
+    });
     return button;
   }
 
@@ -170,6 +284,7 @@
         : Array.from(controls.children).find((child) => child.contains(anchor)));
       controls.insertBefore(button, directAnchor || null);
     }
+    if (!controls.querySelector('[data-ynv-loop]')) button.before(createLoopButton());
     updateButton(button);
   }
 
@@ -177,7 +292,6 @@
     if (root.querySelector('.ynv-fallback-button')) return;
     const button = createToggleButton();
     button.classList.add('ynv-fallback-button');
-    button.title = 'Restore video stream';
     root.appendChild(button);
   }
 
@@ -197,9 +311,15 @@
     button.disabled = busy;
     button.replaceChildren(busy ? createLoadingIcon() : createVideoIcon(active));
     button.setAttribute('aria-busy', String(busy));
-    button.setAttribute('aria-label', label);
+    const frenchLabels = {
+      'Starting audio-only mode': 'Activation du mode audio seul',
+      'Restoring video stream': 'Rétablissement de la vidéo',
+      'Restore video stream': 'Rétablir la vidéo',
+      'Turn off video stream': 'Activer le mode audio seul',
+    };
+    button.setAttribute('aria-label', frenchPlayer() ? frenchLabels[label] : label);
     button.setAttribute('aria-pressed', String(active));
-    button.title = busy ? label : `${label} (Shift+V)`;
+    if (state.tooltipButton === button) refreshControlTooltip();
   }
 
   function updateButtons() {
@@ -238,10 +358,12 @@
 
   function reconcile() {
     state.reconcileTimer = 0;
+    syncLoop();
+    refreshControlTooltip();
     const supportedPage = Core.isSupportedWatchUrl(window.location.href);
 
     if (!supportedPage && state.mode === 'video') {
-      for (const button of document.querySelectorAll(`[${BUTTON_ATTRIBUTE}]`)) button.remove();
+      for (const button of document.querySelectorAll(`[${BUTTON_ATTRIBUTE}], [data-ynv-loop]`)) button.remove();
       return;
     }
 
@@ -982,6 +1104,11 @@
   }
 
   function handleKeyboard(event) {
+    if (event.key === 'Escape' && state.tooltip) {
+      closeControlTooltip();
+      event.stopImmediatePropagation();
+      return;
+    }
     if (event.defaultPrevented || Core.isEditableTarget(event.target)) return;
 
     if (event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && event.code === 'KeyV') {
@@ -992,7 +1119,7 @@
     }
 
     if (state.mode !== 'audio' || !state.audioApp || !state.audioRoot) return;
-    if (event.target && event.target.closest && event.target.closest(`[${BUTTON_ATTRIBUTE}]`)) return;
+    if (event.target && event.target.closest && event.target.closest(`[${BUTTON_ATTRIBUTE}], [data-ynv-loop]`)) return;
 
     const audio = state.audioRoot.querySelector('audio');
     const app = state.audioApp;
@@ -1176,6 +1303,7 @@
   }
 
   function handleNavigationFinish() {
+    syncLoop();
     const nextVideoId = Core.getVideoId(window.location.href);
     if (state.mode !== 'video' && state.routeVideoId && nextVideoId !== state.routeVideoId) {
       abandonAudioMode();

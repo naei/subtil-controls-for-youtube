@@ -65,6 +65,39 @@
   transition: opacity 140ms ease;
 }
 
+[data-ynv-loop][aria-pressed="true"] svg path {
+  stroke: var(--ynv-accent, #ff0033);
+}
+
+[data-ynv-loop][aria-pressed="true"]::after {
+  position: absolute;
+  bottom: 3%;
+  left: 35%;
+  width: 30%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ynv-accent, #ff0033);
+  content: "";
+}
+
+/* YouTube hides its own tooltip classes until its internal controller opens them. */
+.ynv-control-tooltip {
+  position: absolute;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 1000;
+  max-width: calc(100% - 8px);
+  box-sizing: border-box;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #eee;
+  font: 500 12.98px/15px "YouTube Noto", Roboto, Arial, Helvetica, sans-serif;
+  text-shadow: 0 0 2px #000;
+}
+
 .ynv-toggle-button:hover {
   opacity: 1;
 }

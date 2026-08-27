@@ -1,4 +1,4 @@
-# YouTube Audio-Only Mode
+# Subtil Controls for YouTube
 
 This Chrome extension adds a **Turn off video stream** button to the YouTube playback bar, immediately before Settings. Clicking it replaces the video pipeline with YouTube's internal audio-only player, displays the video thumbnail, and keeps the playback controls available.
 
@@ -14,6 +14,8 @@ This Chrome extension adds a **Turn off video stream** button to the YouTube pla
 The camera button appears in the player controls. You can also use **Shift+V**.
 Its filled 24×24 glyph follows the scale and visual weight of YouTube's native controls.
 The button and player show an immediate progress indicator while the audio-only pipeline starts.
+
+Click **Loop current video** beside the camera button to replay the current video indefinitely. Click it again to turn looping off. The setting follows the current video when switching to audio-only mode and resets when you open another video.
 
 ## What the extension actually does
 
@@ -56,7 +58,7 @@ After `npm install`, an end-to-end test using a real Chrome instance is also ava
 npm run test:e2e
 ```
 
-To validate the extension and create `youtube-audio-only.zip`:
+To validate the extension and create `subtil-controls-for-youtube.zip`:
 
 ```bash
 npm run package
