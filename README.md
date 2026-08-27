@@ -32,6 +32,7 @@ Chrome may temporarily retain previously received bytes in its HTTP cache or int
 - Chrome 111 or later.
 - On-demand videos on `youtube.com/watch` pages.
 - Completed live replays are supported. Active and upcoming live streams, Shorts, and ads are not switched to audio-only mode.
+- Preview thumbnails automatically fall back from high resolution to SD, HQ, MQ, and default sizes when a source is missing, invalid, or stalls.
 - The playback and progress bars stay aligned when switching between classic, theater, and fullscreen modes.
 - Clicking anywhere on the thumbnail reliably toggles playback, including when YouTube's detached player ignores the native click, and keeps native feedback visible when YouTube provides it.
 - Theater mode and fullscreen remain available while audio-only mode is active.

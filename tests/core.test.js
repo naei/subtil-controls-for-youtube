@@ -18,7 +18,7 @@ test('limits the interface to watch pages', () => {
   assert.equal(Core.isSupportedWatchUrl('https://m.youtube.com/watch?v=pcTx4lYk1_0'), false);
 });
 
-test('sorts thumbnails by area and removes duplicates', () => {
+test('sorts thumbnails by area, removes duplicates, and adds lower-resolution fallbacks', () => {
   const response = {
     videoDetails: {
       thumbnail: {
@@ -39,6 +39,33 @@ test('sorts thumbnails by area and removes duplicates', () => {
     candidates.indexOf('https://i.ytimg.com/vi/pcTx4lYk1_0/hqdefault.jpg')
       < candidates.indexOf('small.jpg'),
   );
+  assert.ok(candidates.includes('https://i.ytimg.com/vi/pcTx4lYk1_0/mqdefault.jpg'));
+  assert.equal(candidates.at(-1), 'https://i.ytimg.com/vi/pcTx4lYk1_0/default.jpg');
+});
+
+test('rejects missing-resolution placeholders while accepting real thumbnail sizes', () => {
+  assert.equal(Core.isThumbnailCandidateUsable(
+    'https://i.ytimg.com/vi/pcTx4lYk1_0/maxresdefault.jpg',
+    120,
+    90,
+  ), false);
+  assert.equal(Core.isThumbnailCandidateUsable(
+    'https://i.ytimg.com/vi/pcTx4lYk1_0/maxresdefault.jpg',
+    1280,
+    720,
+  ), true);
+  assert.equal(Core.isThumbnailCandidateUsable(
+    'https://i.ytimg.com/vi/pcTx4lYk1_0/sddefault.jpg',
+    640,
+    480,
+  ), true);
+  assert.equal(Core.isThumbnailCandidateUsable(
+    'https://i.ytimg.com/vi/pcTx4lYk1_0/default.jpg',
+    120,
+    90,
+  ), true);
+  assert.equal(Core.isThumbnailCandidateUsable('https://example.com/custom.jpg', 1, 1), true);
+  assert.equal(Core.isThumbnailCandidateUsable('https://example.com/custom.jpg', 0, 0), false);
 });
 
 test('detects adaptive audio streams and distinguishes active live streams from replays', () => {

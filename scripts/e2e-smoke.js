@@ -13,6 +13,7 @@ const chromePath = process.env.CHROME_PATH
   || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const referenceUrl = process.env.YOUTUBE_TEST_URL
   || 'https://www.youtube.com/watch?v=pcTx4lYk1_0';
+const expectedPreviewSource = process.env.EXPECTED_PREVIEW_SOURCE || '';
 const profilePath = fs.mkdtempSync(path.join(os.tmpdir(), 'ynv-e2e-'));
 
 async function inspect(page) {
@@ -21,6 +22,7 @@ async function inspect(page) {
     const audioRoot = document.querySelector('#ynv-audio-player');
     const video = original && original.querySelector('video');
     const audio = audioRoot && audioRoot.querySelector('audio');
+    const previewImage = audioRoot && audioRoot.querySelector('.ynv-preview__image');
 
     return {
       activeButton: Boolean(audioRoot && audioRoot.querySelector('[data-ynv-toggle][aria-pressed="true"]')),
@@ -45,10 +47,17 @@ async function inspect(page) {
         paused: video.paused,
         readyState: video.readyState,
       },
-      preview: Boolean(audioRoot && audioRoot.querySelector('.ynv-preview__image')),
+      preview: Boolean(previewImage),
+      previewComplete: Boolean(previewImage && previewImage.complete),
       previewLabel: audioRoot
         && audioRoot.querySelector('.ynv-preview__badge span')
         && audioRoot.querySelector('.ynv-preview__badge span').textContent,
+      previewNaturalHeight: previewImage && previewImage.naturalHeight,
+      previewNaturalWidth: previewImage && previewImage.naturalWidth,
+      previewSource: previewImage && previewImage.currentSrc,
+      previewUnavailable: Boolean(
+        previewImage && previewImage.classList.contains('ynv-preview__image--unavailable')
+      ),
     };
   });
 }
@@ -139,6 +148,10 @@ async function inspect(page) {
       timeout: 15000,
     });
     const activationDurationMs = Date.now() - activationStartedAt;
+    await page.waitForFunction(() => {
+      const image = document.querySelector('#ynv-audio-player .ynv-preview__image');
+      return Boolean(image && image.complete && image.naturalWidth > 0);
+    }, null, { timeout: 10000 });
 
     const audioState = await inspect(page);
     assert.equal(audioState.mode, 'audio');
@@ -148,7 +161,18 @@ async function inspect(page) {
     assert.equal(audioState.activeButton, true);
     assert.equal(audioState.audioButtonLabel, 'Restore video stream');
     assert.equal(audioState.preview, true);
+    assert.equal(audioState.previewComplete, true);
     assert.equal(audioState.previewLabel, 'Audio only');
+    assert.ok(audioState.previewNaturalHeight > 0);
+    assert.ok(audioState.previewNaturalWidth > 0);
+    assert.ok(audioState.previewSource.includes(new URL(referenceUrl).searchParams.get('v')));
+    assert.equal(audioState.previewUnavailable, false);
+    if (expectedPreviewSource) {
+      assert.ok(
+        audioState.previewSource.includes(expectedPreviewSource),
+        `Unexpected preview source: ${audioState.previewSource}`,
+      );
+    }
     assert.equal(audioState.audioHasVideo, false);
     assert.ok(audioState.audio && audioState.audio.readyState >= 2);
     assert.equal(audioState.audio.paused, false);

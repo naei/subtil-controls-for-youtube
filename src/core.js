@@ -87,6 +87,8 @@
         { area: 3840 * 2160, url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` },
         { area: 640 * 480, url: `https://i.ytimg.com/vi/${videoId}/sddefault.jpg` },
         { area: 480 * 360, url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` },
+        { area: 320 * 180, url: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg` },
+        { area: 120 * 90, url: `https://i.ytimg.com/vi/${videoId}/default.jpg` },
       );
     }
 
@@ -99,6 +101,34 @@
         seen.add(url);
         return true;
       });
+  }
+
+  function isThumbnailCandidateUsable(url, naturalWidth, naturalHeight) {
+    const width = Number(naturalWidth) || 0;
+    const height = Number(naturalHeight) || 0;
+    if (width < 1 || height < 1) return false;
+
+    let pathname = '';
+    try {
+      pathname = new URL(String(url), 'https://www.youtube.com').pathname;
+    } catch (_error) {
+      return false;
+    }
+
+    const filename = pathname.match(
+      /\/(maxresdefault|sddefault|hqdefault|mqdefault|default)\.(?:jpg|webp)$/,
+    );
+    if (!filename) return true;
+
+    const minimumDimensions = {
+      maxresdefault: [640, 360],
+      sddefault: [480, 360],
+      hqdefault: [320, 180],
+      mqdefault: [200, 110],
+      default: [90, 60],
+    };
+    const [minimumWidth, minimumHeight] = minimumDimensions[filename[1]];
+    return width >= minimumWidth && height >= minimumHeight;
   }
 
   function hasAudioRepresentation(playerResponse) {
@@ -208,6 +238,7 @@
     isEditableTarget,
     isActiveLiveContent,
     isSupportedWatchUrl,
+    isThumbnailCandidateUsable,
     safeCall,
     snapshotPlayback,
   });

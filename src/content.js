@@ -15,6 +15,7 @@
   const BUTTON_ATTRIBUTE = 'data-ynv-toggle';
   const MODE_ATTRIBUTE = 'data-ynv-mode';
   const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const THUMBNAIL_LOAD_TIMEOUT = 1200;
   const WATCH_CONTEXT_ID = 'WEB_PLAYER_CONTEXT_CONFIG_ID_KEVLAR_WATCH';
 
   const state = {
@@ -652,13 +653,58 @@
 
     const candidates = Core.getThumbnailCandidates(playerResponse, videoId);
     let candidateIndex = 0;
+    let activeProbe = null;
+    let retryTimer = 0;
+
+    const clearProbe = () => {
+      if (retryTimer) window.clearTimeout(retryTimer);
+      retryTimer = 0;
+      if (activeProbe) {
+        activeProbe.onload = null;
+        activeProbe.onerror = null;
+      }
+      activeProbe = null;
+    };
+
     const loadNextCandidate = () => {
+      clearProbe();
+      if (!preview.isConnected) return;
+
       const candidate = candidates[candidateIndex++];
-      if (candidate) image.src = candidate;
-      else image.classList.add('ynv-preview__image--unavailable');
+      if (!candidate) {
+        image.classList.add('ynv-preview__image--unavailable');
+        return;
+      }
+
+      const probe = new Image();
+      activeProbe = probe;
+      probe.decoding = 'async';
+
+      const tryNextCandidate = () => {
+        if (activeProbe !== probe) return;
+        clearProbe();
+        loadNextCandidate();
+      };
+      probe.onload = () => {
+        if (activeProbe !== probe) return;
+        const usable = Core.isThumbnailCandidateUsable(
+          candidate,
+          probe.naturalWidth,
+          probe.naturalHeight,
+        );
+        clearProbe();
+        if (!usable) {
+          loadNextCandidate();
+          return;
+        }
+        image.classList.remove('ynv-preview__image--unavailable');
+        image.src = candidate;
+      };
+      probe.onerror = tryNextCandidate;
+      retryTimer = window.setTimeout(tryNextCandidate, THUMBNAIL_LOAD_TIMEOUT);
+      probe.src = candidate;
     };
     image.addEventListener('error', loadNextCandidate);
-    loadNextCandidate();
 
     const veil = document.createElement('div');
     veil.className = 'ynv-preview__veil';
@@ -672,6 +718,7 @@
 
     preview.append(image, veil, badge);
     root.appendChild(preview);
+    loadNextCandidate();
   }
 
   function waitForMedia(root, selector, generation, timeout) {
