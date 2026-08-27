@@ -25,6 +25,7 @@
     originalArgs: null,
     originalHost: null,
     originalPlayer: null,
+    playbackSurfaceToken: 0,
     playerResponse: null,
     reconcileTimer: 0,
     routeVideoId: null,
@@ -36,26 +37,32 @@
 
   function createVideoIcon(crossed) {
     const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
-    svg.setAttribute('viewBox', '0 0 36 36');
+    svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
+    svg.classList.add('ynv-video-icon');
 
     const body = document.createElementNS(SVG_NAMESPACE, 'rect');
-    body.setAttribute('x', '7.5');
-    body.setAttribute('y', '11');
-    body.setAttribute('width', '16');
-    body.setAttribute('height', '14');
-    body.setAttribute('rx', '3');
+    body.setAttribute('x', '2');
+    body.setAttribute('y', '5.5');
+    body.setAttribute('width', '13.5');
+    body.setAttribute('height', '13');
+    body.setAttribute('rx', '2.25');
+    body.setAttribute('fill', 'white');
 
     const lens = document.createElementNS(SVG_NAMESPACE, 'path');
-    lens.setAttribute('d', 'm23.5 15 6-3v12l-6-3z');
+    lens.setAttribute('d', 'M15 9.25 20.45 6.1A1 1 0 0 1 22 6.96v10.08a1 1 0 0 1-1.55.86L15 14.75z');
+    lens.setAttribute('fill', 'white');
     svg.append(body, lens);
 
     if (crossed) {
+      const slashBackdrop = document.createElementNS(SVG_NAMESPACE, 'path');
+      slashBackdrop.setAttribute('class', 'ynv-icon-slash-backdrop');
+      slashBackdrop.setAttribute('d', 'M4.25 4.25 19.75 19.75');
       const slash = document.createElementNS(SVG_NAMESPACE, 'path');
       slash.setAttribute('class', 'ynv-icon-slash');
-      slash.setAttribute('d', 'M7 7 29 29');
-      svg.appendChild(slash);
+      slash.setAttribute('d', 'M4.25 4.25 19.75 19.75');
+      svg.append(slashBackdrop, slash);
     }
     return svg;
   }
@@ -119,7 +126,14 @@
   function ensureButton(root) {
     if (!root || !root.isConnected) return;
     const controls = root.querySelector('.ytp-right-controls');
-    if (!controls) return;
+    if (!controls) {
+      if (state.mode === 'audio') ensureFallbackButton(root);
+      return;
+    }
+
+    if (root === state.audioRoot) controls.classList.add('ynv-right-controls');
+    const fallback = root.querySelector('.ynv-fallback-button');
+    if (fallback) fallback.remove();
 
     let button = controls.querySelector(`[${BUTTON_ATTRIBUTE}]`);
     if (!button) {
@@ -134,6 +148,14 @@
       controls.insertBefore(button, directAnchor || null);
     }
     updateButton(button);
+  }
+
+  function ensureFallbackButton(root) {
+    if (root.querySelector('.ynv-fallback-button')) return;
+    const button = createToggleButton();
+    button.classList.add('ynv-fallback-button');
+    button.title = 'Restore video stream';
+    root.appendChild(button);
   }
 
   function updateButton(button) {
@@ -439,6 +461,7 @@
     audioRoot.className = `${Core.copyPlayerClasses(originalPlayer.className)} ynv-audio-player--pending`;
     audioRoot.setAttribute('aria-label', 'YouTube audio-only player');
     audioRoot.setAttribute('data-ynv-pipeline', 'audio-only');
+    audioRoot.addEventListener('click', handleAudioPlayerControlClick, true);
 
     host.classList.add('ynv-player-host');
     host.appendChild(audioRoot);
@@ -566,6 +589,7 @@
     image.className = 'ynv-preview__image';
     image.alt = '';
     image.decoding = 'async';
+    image.setAttribute('aria-hidden', 'true');
 
     const candidates = Core.getThumbnailCandidates(playerResponse, videoId);
     let candidateIndex = 0;
@@ -579,6 +603,7 @@
 
     const veil = document.createElement('div');
     veil.className = 'ynv-preview__veil';
+    veil.setAttribute('aria-hidden', 'true');
 
     const badge = document.createElement('div');
     badge.className = 'ynv-preview__badge';
@@ -754,6 +779,7 @@
 
   function clearAudioState() {
     if (state.originalHost) state.originalHost.classList.remove('ynv-player-host');
+    ++state.playbackSurfaceToken;
     state.audioApp = null;
     state.audioRoot = null;
     state.originalArgs = null;
@@ -900,6 +926,9 @@
         else handled = false;
         break;
       }
+      case 'KeyT':
+        toggleTheaterMode();
+        break;
       default: {
         const digit = event.code.match(/^Digit([0-9])$/);
         if (digit && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
@@ -931,6 +960,111 @@
     if (volume > 0 && state.audioApp.isMuted()) state.audioApp.BG.unMute();
   }
 
+  function isAudioPlaybackSurfaceClick(event) {
+    if (!state.audioRoot || !event.target || !event.target.closest) return false;
+    if (event.button !== 0 || event.detail > 1) return false;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false;
+
+    const interactiveTarget = event.target.closest([
+      'a',
+      'button',
+      'input',
+      'select',
+      'textarea',
+      '[role="button"]',
+      '[role="menuitem"]',
+      '[role="slider"]',
+      '.ytp-chrome-bottom',
+      '.ytp-popup',
+      '.ytp-tooltip',
+    ].join(', '));
+    if (interactiveTarget && state.audioRoot.contains(interactiveTarget)) return false;
+
+    const preview = state.audioRoot.querySelector('.ynv-preview');
+    if (!preview) return false;
+    const previewRect = preview.getBoundingClientRect();
+    return event.clientX >= previewRect.left
+      && event.clientX <= previewRect.right
+      && event.clientY >= previewRect.top
+      && event.clientY <= previewRect.bottom;
+  }
+
+  function relayAudioSurfacePlayback(event) {
+    if (!isAudioPlaybackSurfaceClick(event)) return;
+    const audioApp = state.audioApp;
+    const audio = state.audioRoot && state.audioRoot.querySelector('audio');
+    if (!audioApp || !audio) return;
+
+    // Keep YouTube's native click handler and visual feedback. Reapplying the
+    // intended final state after propagation makes the surface deterministic
+    // when a detached audio player ignores that native click.
+    const shouldPlay = audio.paused;
+    const token = ++state.playbackSurfaceToken;
+    const applyIntendedState = () => {
+      if (state.mode !== 'audio'
+        || state.audioApp !== audioApp
+        || state.playbackSurfaceToken !== token
+        || !audio.isConnected) return;
+      try {
+        if (shouldPlay) audioApp.playVideo();
+        else audioApp.pauseVideo();
+      } catch (_error) {}
+    };
+    window.setTimeout(applyIntendedState, 120);
+    window.setTimeout(applyIntendedState, 260);
+  }
+
+  function handleAudioPlayerControlClick(event) {
+    if (state.mode !== 'audio' || !event.target || !event.target.closest) return;
+
+    if (event.target.closest('.ytp-size-button')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      toggleTheaterMode();
+      return;
+    }
+
+    if (event.target.closest('.ytp-fullscreen-button') && document.fullscreenElement) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const exitPromise = document.exitFullscreen();
+      if (exitPromise && typeof exitPromise.catch === 'function') {
+        exitPromise.catch((error) => {
+          console.warn('[YouTube Audio Only] Fullscreen exit failed:', error);
+          showToast('Unable to exit fullscreen mode.', 'error');
+        });
+      }
+    }
+
+    relayAudioSurfacePlayback(event);
+  }
+
+  function toggleTheaterMode() {
+    const originalButton = state.originalPlayer
+      && state.originalPlayer.querySelector('.ytp-size-button');
+    if (!originalButton) {
+      showToast('Theater mode is unavailable.', 'error');
+      return;
+    }
+
+    originalButton.click();
+    window.setTimeout(syncTheaterButton, 120);
+    scheduleReconcile(0);
+  }
+
+  function syncTheaterButton() {
+    if (!state.audioRoot || !state.originalPlayer) return;
+    const source = state.originalPlayer.querySelector('.ytp-size-button');
+    const target = state.audioRoot.querySelector('.ytp-size-button');
+    if (!source || !target) return;
+
+    for (const attribute of ['aria-label', 'data-title-no-tooltip', 'title']) {
+      const value = source.getAttribute(attribute);
+      if (value == null) target.removeAttribute(attribute);
+      else target.setAttribute(attribute, value);
+    }
+  }
+
   function handleNavigationStart() {
     if (state.mode !== 'video') abandonAudioMode();
   }
@@ -949,11 +1083,15 @@
   document.addEventListener('yt-navigate-start', handleNavigationStart, true);
   document.addEventListener('yt-navigate-finish', handleNavigationFinish, true);
   document.addEventListener('yt-page-data-updated', () => scheduleReconcile(80), true);
+  document.addEventListener('fullscreenchange', () => scheduleReconcile(0), true);
   window.addEventListener('popstate', handleNavigationStart, true);
   window.addEventListener('pagehide', abandonAudioMode, { once: true });
 
   const observer = new MutationObserver((mutations) => {
-    const relevant = mutations.some((mutation) => Array.from(mutation.addedNodes).some((node) => {
+    const relevant = mutations.some((mutation) => [
+      ...mutation.addedNodes,
+      ...mutation.removedNodes,
+    ].some((node) => {
       if (node.nodeType !== Node.ELEMENT_NODE) return false;
       return node.matches('#movie_player, .ytp-right-controls, ytd-player, #ynv-audio-player')
         || node.querySelector('#movie_player, .ytp-right-controls, #ynv-audio-player');

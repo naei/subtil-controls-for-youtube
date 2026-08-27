@@ -7,11 +7,12 @@ This Chrome extension adds a **Turn off video stream** button to the YouTube pla
 1. Open `chrome://extensions` in Chrome.
 2. Enable **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this folder (`youtube-no-video`).
+4. Select this folder (`youtube-audio-only`).
 5. Open or reload a YouTube video, for example:
    <https://www.youtube.com/watch?v=pcTx4lYk1_0>
 
 The camera button appears in the player controls. You can also use **Shift+V**.
+Its filled 24×24 glyph follows the scale and visual weight of YouTube's native controls.
 
 ## What the extension actually does
 
@@ -30,8 +31,12 @@ Chrome may temporarily retain previously received bytes in its HTTP cache or int
 - Chrome 111 or later.
 - On-demand videos on `youtube.com/watch` pages.
 - Completed live replays are supported. Active and upcoming live streams, Shorts, and ads are not switched to audio-only mode.
+- The playback and progress bars stay aligned when switching between classic, theater, and fullscreen modes.
+- Clicking anywhere on the thumbnail reliably toggles playback, including when YouTube's detached player ignores the native click, and keeps native feedback visible when YouTube provides it.
+- Theater mode and fullscreen remain available while audio-only mode is active.
 - YouTube does not publicly document its audio-only player context. An internal player change may therefore require an extension update.
 - The Next button and autoplay are hidden in the standalone audio player to prevent the media from changing without a matching page URL update. YouTube links and recommendations remain available as usual.
+- If YouTube rebuilds or temporarily removes its right-side control group, the extension reinserts its button and exposes a fallback restore button when necessary.
 
 ## Verification
 
