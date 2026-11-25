@@ -7,7 +7,7 @@ const { spawnSync } = require('node:child_process');
 const projectRoot = path.resolve(__dirname, '..');
 const archiveName = 'subtil-controls-for-youtube.zip';
 const archivePath = path.join(projectRoot, archiveName);
-const extensionFiles = ['manifest.json', 'src', 'icons', 'README.md'];
+const extensionFiles = ['manifest.json', 'src', 'icons', 'LICENSE'];
 
 function runZip(arguments_) {
   const result = spawnSync('zip', arguments_, {
@@ -28,7 +28,7 @@ function runZip(arguments_) {
 }
 
 const mode = fs.existsSync(archivePath) ? '-FSr' : '-r';
-runZip([mode, archiveName, ...extensionFiles]);
+runZip([mode, archiveName, ...extensionFiles, '-x', 'icons/icon.svg']);
 runZip(['-T', archiveName]);
 
 console.log(`Extension package created: ${archivePath}`);

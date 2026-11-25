@@ -184,19 +184,15 @@ async function inspect(page) {
       const root = document.querySelector('#ynv-audio-player');
       const button = root.querySelector('[data-ynv-toggle]');
       const icon = button && button.querySelector('.ynv-video-icon');
-      const cameraBody = icon && icon.querySelector('rect');
       const slash = icon && icon.querySelector('.ynv-icon-slash');
-      const slashBackdrop = icon && icon.querySelector('.ynv-icon-slash-backdrop');
       const nativeIcon = root.querySelector('.ytp-subtitles-button svg');
       const iconRect = icon && icon.getBoundingClientRect();
       const nativeRect = nativeIcon && nativeIcon.getBoundingClientRect();
       return {
-        cameraFill: cameraBody && getComputedStyle(cameraBody).fill,
+        slashStroke: slash && getComputedStyle(slash).stroke,
         height: iconRect && iconRect.height,
         nativeHeight: nativeRect && nativeRect.height,
         nativeWidth: nativeRect && nativeRect.width,
-        slashBackdropStroke: slashBackdrop && getComputedStyle(slashBackdrop).stroke,
-        slashStroke: slash && getComputedStyle(slash).stroke,
         viewBox: icon && icon.getAttribute('viewBox'),
         width: iconRect && iconRect.width,
       };
@@ -210,9 +206,7 @@ async function inspect(page) {
       Math.abs(iconState.height - iconState.nativeHeight) < 0.5,
       `Extension icon should match native height: ${JSON.stringify(iconState)}`,
     );
-    assert.equal(iconState.cameraFill, 'rgb(255, 255, 255)');
     assert.equal(iconState.slashStroke, 'rgb(255, 0, 51)');
-    assert.notEqual(iconState.slashBackdropStroke, 'none');
 
     const inspectNativePlaybackFeedback = () => page.evaluate(() => {
       const root = document.querySelector('#ynv-audio-player');

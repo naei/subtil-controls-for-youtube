@@ -219,6 +219,11 @@
     );
   }
 
+  function resolveLocale(locales, languageTag) {
+    const tag = String(languageTag || '').toLowerCase();
+    return locales[tag] || locales[tag.split('-')[0]] || locales.en;
+  }
+
   function safeCall(object, method, fallback) {
     try {
       return object && typeof object[method] === 'function' ? object[method]() : fallback;
@@ -239,6 +244,7 @@
     isActiveLiveContent,
     isSupportedWatchUrl,
     isThumbnailCandidateUsable,
+    resolveLocale,
     safeCall,
     snapshotPlayback,
   });

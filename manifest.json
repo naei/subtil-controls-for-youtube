@@ -5,6 +5,7 @@
   "version": "1.7.2",
   "description": "Extra controls, built into the YouTube playback bar you already know.",
   "minimum_chrome_version": "111",
+  "homepage_url": "https://github.com/naei/subtil-controls-for-youtube",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -18,6 +19,9 @@
       ],
       "js": [
         "src/core.js",
+        "src/locales/en.js",
+        "src/locales/fr.js",
+        "src/locales/es.js",
         "src/content.js"
       ],
       "css": [

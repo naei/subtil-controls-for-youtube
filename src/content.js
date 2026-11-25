@@ -8,7 +8,8 @@
   });
 
   const Core = window.__YOUTUBE_NO_VIDEO_CORE__;
-  if (!Core) return;
+  const Locales = window.__YOUTUBE_NO_VIDEO_LOCALES__;
+  if (!Core || !Locales?.en) return;
 
   const AUDIO_ROOT_ID = 'ynv-audio-player';
   const AUDIO_ENGINE_ID = 'ynv-audio-engine';
@@ -40,6 +41,7 @@
 
   setDocumentMode('video');
 
+  // Open eye in video mode, the same eye struck through in audio-only mode.
   function createVideoIcon(crossed) {
     const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -47,26 +49,24 @@
     svg.setAttribute('focusable', 'false');
     svg.classList.add('ynv-video-icon');
 
-    const body = document.createElementNS(SVG_NAMESPACE, 'rect');
-    body.setAttribute('x', '2');
-    body.setAttribute('y', '5.5');
-    body.setAttribute('width', '13.5');
-    body.setAttribute('height', '13');
-    body.setAttribute('rx', '2.25');
-    body.setAttribute('fill', 'white');
+    const outline = document.createElementNS(SVG_NAMESPACE, 'path');
+    outline.setAttribute('class', 'ynv-icon-outline');
+    outline.setAttribute('d', 'M2.5 12C4.9 7.9 8.1 5.8 12 5.8s7.1 2.1 9.5 6.2c-2.4 4.1-5.6 6.2-9.5 6.2S4.9 16.1 2.5 12Z');
 
-    const lens = document.createElementNS(SVG_NAMESPACE, 'path');
-    lens.setAttribute('d', 'M15 9.25 20.45 6.1A1 1 0 0 1 22 6.96v10.08a1 1 0 0 1-1.55.86L15 14.75z');
-    lens.setAttribute('fill', 'white');
-    svg.append(body, lens);
+    // Iris tucked under the upper lid, with a highlight cut out of it.
+    const iris = document.createElementNS(SVG_NAMESPACE, 'path');
+    iris.setAttribute('d', 'M7.6 11a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0-8.8 0ZM12.3 9.9a1.35 1.35 0 1 0 2.7 0a1.35 1.35 0 1 0-2.7 0Z');
+    iris.setAttribute('fill', 'white');
+    iris.setAttribute('fill-rule', 'evenodd');
+    svg.append(outline, iris);
 
     if (crossed) {
       const slashBackdrop = document.createElementNS(SVG_NAMESPACE, 'path');
       slashBackdrop.setAttribute('class', 'ynv-icon-slash-backdrop');
-      slashBackdrop.setAttribute('d', 'M4.25 4.25 19.75 19.75');
+      slashBackdrop.setAttribute('d', 'M4.5 4.5l15 15');
       const slash = document.createElementNS(SVG_NAMESPACE, 'path');
       slash.setAttribute('class', 'ynv-icon-slash');
-      slash.setAttribute('d', 'M4.25 4.25 19.75 19.75');
+      slash.setAttribute('d', 'M4.5 4.5l15 15');
       svg.append(slashBackdrop, slash);
     }
     return svg;
@@ -138,8 +138,10 @@
     }
   }
 
-  function frenchPlayer() {
-    return (document.documentElement.lang || navigator.language).toLowerCase().startsWith('fr');
+  // YouTube sets <html lang> to the interface language chosen by the user.
+  function t(key) {
+    const messages = Core.resolveLocale(Locales, document.documentElement.lang || navigator.language);
+    return messages[key] || Locales.en[key];
   }
 
   function closeControlTooltip() {
@@ -158,9 +160,7 @@
     }
 
     const label = button.hasAttribute('data-ynv-loop')
-      ? (state.loopVideoId
-        ? (frenchPlayer() ? 'Désactiver la lecture en boucle' : 'Turn off loop')
-        : (frenchPlayer() ? 'Activer la lecture en boucle' : 'Turn on loop'))
+      ? t(state.loopVideoId ? 'loopOff' : 'loopOn')
       : button.getAttribute('aria-label');
     if (tooltip.textContent !== label) tooltip.textContent = label;
     const bounds = root.getBoundingClientRect();
@@ -200,7 +200,6 @@
     button.type = 'button';
     button.className = 'ytp-button ynv-toggle-button';
     button.setAttribute(BUTTON_ATTRIBUTE, '');
-    button.setAttribute('aria-keyshortcuts', 'Shift+V');
     attachControlTooltip(button);
     button.addEventListener('click', (event) => {
       event.preventDefault();
@@ -233,21 +232,28 @@
     button.type = 'button';
     button.className = 'ytp-button ynv-toggle-button';
     button.setAttribute('data-ynv-loop', '');
-    button.setAttribute('aria-label', frenchPlayer() ? 'Lecture en boucle' : 'Loop current video');
+    button.setAttribute('aria-label', t('loop'));
     attachControlTooltip(button);
     button.setAttribute('aria-pressed', String(Boolean(state.loopVideoId)));
 
     const icon = document.createElementNS(SVG_NAMESPACE, 'svg');
     icon.setAttribute('viewBox', '0 0 24 24');
     icon.setAttribute('aria-hidden', 'true');
-    const arrows = document.createElementNS(SVG_NAMESPACE, 'path');
-    arrows.setAttribute('d', 'M3 12v-1a4.5 4.5 0 0 1 4.5-4.5H20m-3.5-3.5L20 6.5 16.5 10M21 12v1a4.5 4.5 0 0 1-4.5 4.5H4m3.5 3.5L4 17.5 7.5 14');
-    arrows.setAttribute('fill', 'none');
-    arrows.setAttribute('stroke', 'currentColor');
-    arrows.setAttribute('stroke-width', '2.1');
-    arrows.setAttribute('stroke-linecap', 'round');
-    arrows.setAttribute('stroke-linejoin', 'round');
-    icon.appendChild(arrows);
+    // The return arrow is dimmed by CSS until looping is on, so the loop reads as open.
+    for (const [name, d] of [
+      ['', 'M3 12v-1a4.5 4.5 0 0 1 4.5-4.5H20m-3.5-3.5L20 6.5 16.5 10'],
+      ['ynv-loop-return', 'M21 12v1a4.5 4.5 0 0 1-4.5 4.5H4m3.5 3.5L4 17.5 7.5 14'],
+    ]) {
+      const arrow = document.createElementNS(SVG_NAMESPACE, 'path');
+      if (name) arrow.setAttribute('class', name);
+      arrow.setAttribute('d', d);
+      arrow.setAttribute('fill', 'none');
+      arrow.setAttribute('stroke', 'currentColor');
+      arrow.setAttribute('stroke-width', '2.1');
+      arrow.setAttribute('stroke-linecap', 'round');
+      arrow.setAttribute('stroke-linejoin', 'round');
+      icon.appendChild(arrow);
+    }
     button.appendChild(icon);
     button.addEventListener('click', (event) => {
       event.preventDefault();
@@ -299,25 +305,18 @@
     if (!button) return;
     const active = state.mode === 'audio' || state.mode === 'restoring';
     const busy = state.mode === 'enabling' || state.mode === 'restoring';
-    const label = state.mode === 'enabling'
-      ? 'Starting audio-only mode'
+    const label = t(state.mode === 'enabling'
+      ? 'audioStarting'
       : state.mode === 'restoring'
-        ? 'Restoring video stream'
+        ? 'videoRestoring'
         : active
-          ? 'Restore video stream'
-          : 'Turn off video stream';
+          ? 'videoRestore'
+          : 'videoOff');
 
-    button.classList.toggle('ynv-toggle-button--active', active);
     button.disabled = busy;
     button.replaceChildren(busy ? createLoadingIcon() : createVideoIcon(active));
     button.setAttribute('aria-busy', String(busy));
-    const frenchLabels = {
-      'Starting audio-only mode': 'Activation du mode audio seul',
-      'Restoring video stream': 'Rétablissement de la vidéo',
-      'Restore video stream': 'Rétablir la vidéo',
-      'Turn off video stream': 'Activer le mode audio seul',
-    };
-    button.setAttribute('aria-label', frenchPlayer() ? frenchLabels[label] : label);
+    button.setAttribute('aria-label', label);
     button.setAttribute('aria-pressed', String(active));
     if (state.tooltipButton === button) refreshControlTooltip();
   }
@@ -336,12 +335,12 @@
     overlay.className = 'ynv-loading-overlay';
     overlay.setAttribute('role', 'status');
     overlay.setAttribute('aria-live', 'polite');
-    overlay.setAttribute('aria-label', 'Starting audio-only mode');
+    overlay.setAttribute('aria-label', t('audioStarting'));
 
     const status = document.createElement('div');
     status.className = 'ynv-loading-overlay__status';
     const label = document.createElement('span');
-    label.textContent = 'Starting audio-only mode…';
+    label.textContent = t('audioStarting') + '…';
     status.append(createLoadingIcon(), label);
     overlay.appendChild(status);
     overlay.addEventListener('click', (event) => {
@@ -415,21 +414,21 @@
     const videoId = Core.getVideoId(window.location.href);
 
     if (!Core.isSupportedWatchUrl(window.location.href) || !videoId || !isPlayerReady(originalPlayer)) {
-      showToast('The YouTube player is not ready yet.', 'error');
+      showToast(t('playerNotReady'), 'error');
       return;
     }
     if (isAdvertisement(originalPlayer, videoId)) {
-      showToast('Audio-only mode will be available after the ad.', 'info');
+      showToast(t('afterAd'), 'info');
       return;
     }
 
     const playerResponse = originalPlayer.getPlayerResponse();
     if (!Core.hasAudioRepresentation(playerResponse)) {
-      showToast('No separate audio stream is available for this video.', 'error');
+      showToast(t('noAudioStream'), 'error');
       return;
     }
     if (Core.isActiveLiveContent(playerResponse)) {
-      showToast('Active YouTube live streams are not supported yet.', 'error');
+      showToast(t('liveUnsupported'), 'error');
       return;
     }
 
@@ -439,7 +438,7 @@
       && window.yt.player.Application.create;
     const context = getWatchPlayerContext(originalPlayer);
     if (typeof applicationFactory !== 'function' || !context) {
-      showToast('The YouTube audio player is unavailable on this page.', 'error');
+      showToast(t('audioPlayerUnavailable'), 'error');
       return;
     }
 
@@ -497,7 +496,7 @@
       setOriginalPlayerHidden(originalPlayer, true);
       audioRoot.classList.remove('ynv-audio-player--pending');
       setDocumentMode('audio');
-      announce('Video stream disabled. Audio-only playback enabled.');
+      announce(t('audioEnabled'));
     } catch (error) {
       activationOverlay.remove();
       if (audioApp) disposeAudioApp(audioApp);
@@ -520,7 +519,7 @@
       }
 
       console.warn('[YouTube Audio Only] Activation failed:', error);
-      showToast('Unable to enable audio-only mode.', 'error');
+      showToast(t('enableFailed'), 'error');
     }
   }
 
@@ -606,7 +605,7 @@
       clearAudioState();
       setDocumentMode('video');
       scheduleReconcile(0);
-      announce('Video stream restored.');
+      announce(t('videoRestored'));
     } catch (error) {
       // A YouTube SPA navigation disposes both players via abandonAudioMode().
       // Resurrecting either local reference here would corrupt the new page.
@@ -615,7 +614,7 @@
       audioRoot.inert = false;
       audioRoot.removeAttribute('aria-busy');
       console.warn('[YouTube Audio Only] Restore failed:', error);
-      showToast('The video could not be restored. Audio-only mode remains active.', 'error');
+      showToast(t('restoreFailed'), 'error');
 
       releaseOriginalVideo(originalPlayer);
       setOriginalPlayerHidden(originalPlayer, true);
@@ -641,7 +640,7 @@
     const audioRoot = document.createElement('div');
     audioRoot.id = AUDIO_ROOT_ID;
     audioRoot.className = `${Core.copyPlayerClasses(originalPlayer.className)} ynv-audio-player--pending`;
-    audioRoot.setAttribute('aria-label', 'YouTube audio-only player');
+    audioRoot.setAttribute('aria-label', t('audioPlayer'));
     audioRoot.setAttribute('data-ynv-pipeline', 'audio-only');
     audioRoot.addEventListener('click', handleAudioPlayerControlClick, true);
 
@@ -835,7 +834,7 @@
     const badge = document.createElement('div');
     badge.className = 'ynv-preview__badge';
     const badgeLabel = document.createElement('span');
-    badgeLabel.textContent = 'Audio only';
+    badgeLabel.textContent = t('audioOnly');
     badge.append(createVideoIcon(true), badgeLabel);
 
     preview.append(image, veil, badge);
@@ -1063,7 +1062,7 @@
     clearAudioState();
     setDocumentMode('video');
     scheduleReconcile(0);
-    showToast('The audio player was reset.', 'error');
+    showToast(t('playerReset'), 'error');
   }
 
   function showToast(message, kind) {
@@ -1110,13 +1109,6 @@
       return;
     }
     if (event.defaultPrevented || Core.isEditableTarget(event.target)) return;
-
-    if (event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && event.code === 'KeyV') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      toggleMode();
-      return;
-    }
 
     if (state.mode !== 'audio' || !state.audioApp || !state.audioRoot) return;
     if (event.target && event.target.closest && event.target.closest(`[${BUTTON_ATTRIBUTE}], [data-ynv-loop]`)) return;
@@ -1264,7 +1256,7 @@
       if (exitPromise && typeof exitPromise.catch === 'function') {
         exitPromise.catch((error) => {
           console.warn('[YouTube Audio Only] Fullscreen exit failed:', error);
-          showToast('Unable to exit fullscreen mode.', 'error');
+          showToast(t('fullscreenExitFailed'), 'error');
         });
       }
     }
@@ -1276,7 +1268,7 @@
     const originalButton = state.originalPlayer
       && state.originalPlayer.querySelector('.ytp-size-button');
     if (!originalButton) {
-      showToast('Theater mode is unavailable.', 'error');
+      showToast(t('theaterUnavailable'), 'error');
       return;
     }
 
