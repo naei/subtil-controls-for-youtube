@@ -5,6 +5,8 @@
 
 Chrome extension that adds an audio-only mode and a loop button directly to the YouTube playback bar.
 
+<img src=".github/screenshots/promo.png" width="440" alt="Subtil Controls for YouTube: the Loop and Audio only buttons in the playback bar">
+
 ![A YouTube video playing in audio-only mode, showing its thumbnail and an Audio only badge](.github/screenshots/02-audio-only.jpg)
 
 The two buttons sit right before Settings and look like YouTube's own controls. There is no toolbar icon, no popup, and nothing to configure.
@@ -31,7 +33,7 @@ Click the loop button to replay the current video indefinitely. Looping follows 
 
 Both buttons follow the size, weight, and tooltips of YouTube's own controls. The eye is struck through while audio-only mode is on, and the loop arrows close into a full loop while looping is on.
 
-![Close-up of the playback bar with loop and audio-only mode active](.github/screenshots/03-toolbar.jpg)
+<img src=".github/screenshots/03-toolbar.jpg" width="440" alt="Close-up of the playback bar with loop and audio-only mode active">
 
 ### Private by design
 
