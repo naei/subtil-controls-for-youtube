@@ -102,6 +102,7 @@ Requires Node.js 24 or later.
 | --- | --- |
 | `npm run check` | Validates the manifest, scripts, icons, and locales, then runs the unit tests. |
 | `npm run test:e2e` | Runs an end-to-end test in a real browser (after `npm install`). |
+| `npm run bump` | Asks for patch, minor, or major, then bumps the version in `package.json` and `manifest.json`. `npm run bump minor` skips the question. |
 | `npm run package` | Runs the checks and creates `subtil-controls-for-youtube.zip`. |
 
 <details>

@@ -10,6 +10,7 @@ const manifestPath = path.join(projectRoot, 'manifest.json');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
 assert.equal(manifest.manifest_version, 3, 'manifest_version must be 3');
+assert.equal(manifest.version, require('../package.json').version, 'manifest.json and package.json versions differ: use "npm run bump"');
 assert.ok(Array.isArray(manifest.content_scripts), 'content_scripts is required');
 assert.equal(manifest.content_scripts[0].world, 'MAIN', 'The script must access the YouTube player in MAIN');
 assert.equal(manifest.content_scripts[0].run_at, 'document_start');
