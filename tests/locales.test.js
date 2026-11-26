@@ -40,3 +40,10 @@ test('resolves the YouTube language to exact, base, then English messages', () =
   assert.equal(Core.resolveLocale(sample, ''), 'en');
   assert.equal(Core.resolveLocale(locales, 'es-419'), locales.es);
 });
+
+test('every popup message key exists in the reference locale', () => {
+  const html = fs.readFileSync(path.join(projectRoot, 'src/popup.html'), 'utf8');
+  const keys = [...html.matchAll(/data-i18n="([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(keys.length > 0, 'popup.html should declare data-i18n keys');
+  for (const key of keys) assert.ok(locales.en[key], `popup.html uses unknown key "${key}"`);
+});

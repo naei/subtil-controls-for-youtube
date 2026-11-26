@@ -20,6 +20,7 @@ const referencedFiles = [
   ...manifest.content_scripts.flatMap((entry) => [...entry.js, ...(entry.css || [])]),
   ...Object.values(manifest.icons || {}),
   ...Object.values((manifest.action && manifest.action.default_icon) || {}),
+  ...(manifest.action && manifest.action.default_popup ? [manifest.action.default_popup] : []),
 ];
 
 for (const relativePath of new Set(referencedFiles)) {

@@ -20,4 +20,9 @@
   playerReset: 'Le lecteur audio a été réinitialisé.',
   fullscreenExitFailed: 'Impossible de quitter le mode plein écran.',
   theaterUnavailable: 'Le mode cinéma est indisponible.',
+  popupWhere: 'Ouvrez une vidéo YouTube. Les deux boutons sont dans la barre de lecture.',
+  popupLoopHelp: "Rejoue la vidéo tant que la boucle est activée.",
+  popupAudioHelp: 'Coupe le flux vidéo et garde le son.',
+  popupOpenYouTube: 'Ouvrir YouTube',
+  popupReport: 'Signaler un problème',
 };

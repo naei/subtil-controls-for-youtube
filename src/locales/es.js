@@ -20,4 +20,9 @@
   playerReset: 'Se ha reiniciado el reproductor de audio.',
   fullscreenExitFailed: 'No se ha podido salir de la pantalla completa.',
   theaterUnavailable: 'El modo cine no está disponible.',
+  popupWhere: 'Abre un vídeo de YouTube. Los dos botones están en la barra de reproducción.',
+  popupLoopHelp: 'Repite el vídeo hasta que lo desactives.',
+  popupAudioHelp: 'Desactiva el flujo de vídeo y mantiene el sonido.',
+  popupOpenYouTube: 'Abrir YouTube',
+  popupReport: 'Informar de un problema',
 };

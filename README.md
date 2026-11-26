@@ -1,5 +1,6 @@
 # <img src=".github/icon.png" width="32" height="24" alt="">&nbsp;Subtil Controls for YouTube
 
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/kdoeimddkggcblkofpbgkmloimpmkddf?label=chrome%20web%20store&logo=googlechrome)](https://chromewebstore.google.com/detail/subtil-controls-for-youtu/kdoeimddkggcblkofpbgkmloimpmkddf)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-blue?logo=googlechrome)](manifest.json)
 
@@ -9,7 +10,7 @@ Chrome extension that adds an audio-only mode and a loop button directly to the 
 
 ![A YouTube video playing in audio-only mode, showing its thumbnail and an Audio only badge](.github/screenshots/02-audio-only.jpg)
 
-The two buttons sit right before Settings and look like YouTube's own controls. There is no toolbar icon, no popup, and nothing to configure.
+The two buttons sit right before Settings and look like YouTube's own controls. There is nothing to configure: clicking the toolbar icon only shows a short reminder of where the buttons are.
 
 <img src=".github/screenshots/demo.gif" width="560" alt="Turning audio-only mode on, then looping, from the YouTube playback bar">
 
@@ -40,6 +41,10 @@ Both buttons follow the size, weight, and tooltips of YouTube's own controls. Th
 No permissions, no network rules, no analytics, no account. The extension only runs on `www.youtube.com`.
 
 ## Install
+
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/subtil-controls-for-youtu/kdoeimddkggcblkofpbgkmloimpmkddf).
+
+To load it from source instead:
 
 1. Download or clone this repository.
 2. Open `chrome://extensions` in Chrome.

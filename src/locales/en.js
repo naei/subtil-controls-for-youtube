@@ -21,4 +21,9 @@
   playerReset: 'The audio player was reset.',
   fullscreenExitFailed: 'Unable to exit fullscreen mode.',
   theaterUnavailable: 'Theater mode is unavailable.',
+  popupWhere: 'Open a YouTube video. Both buttons are in the playback bar.',
+  popupLoopHelp: 'Replays the video until you turn it off.',
+  popupAudioHelp: 'Turns off the video stream and keeps the sound playing.',
+  popupOpenYouTube: 'Open YouTube',
+  popupReport: 'Report a problem',
 };
