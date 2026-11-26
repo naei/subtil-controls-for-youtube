@@ -32,6 +32,18 @@ test('every locale registers under its file name with the same keys as en', () =
   }
 });
 
+// The Chrome Web Store lists a language only if _locales/<code>/messages.json exists.
+test('every locale has a store description in _locales', () => {
+  for (const name of files) {
+    const [language, region] = path.basename(name, '.js').split('-');
+    const folder = region ? `${language}_${region.toUpperCase()}` : language;
+    const messages = require(`../_locales/${folder}/messages.json`);
+    const description = messages.extDescription && messages.extDescription.message;
+    assert.ok(description && description.trim(), `_locales/${folder}: extDescription is missing`);
+    assert.ok(description.length <= 132, `_locales/${folder}: description exceeds the store limit of 132 characters`);
+  }
+});
+
 test('resolves the YouTube language to exact, base, then English messages', () => {
   const sample = { en: 'en', fr: 'fr', 'pt-br': 'pt-br' };
   assert.equal(Core.resolveLocale(sample, 'fr-FR'), 'fr');

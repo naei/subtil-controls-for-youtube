@@ -3,7 +3,8 @@
   "name": "Subtil Controls for YouTube",
   "short_name": "Subtil",
   "version": "1.8.0",
-  "description": "Extra controls, built into the YouTube playback bar you already know.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "minimum_chrome_version": "111",
   "homepage_url": "https://github.com/naei/subtil-controls-for-youtube",
   "icons": {

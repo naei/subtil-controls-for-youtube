@@ -61,7 +61,8 @@ To add a language:
 1. Copy `src/locales/en.js` to `src/locales/<code>.js`, where `<code>` is the lowercase language code (`de`, `it`, or a regional variant such as `pt-br`).
 2. Replace `.en` on the first line with your code (`['pt-br']` for a regional variant) and translate the values. Keep the keys unchanged.
 3. Add the file to `content_scripts[0].js` in `manifest.json`, before `src/content.js`.
-4. Run `npm run check`. It fails if a locale is missing from the manifest or its keys differ from `en.js`.
+4. Copy `_locales/en/messages.json` to `_locales/<code>/messages.json` and translate the description (132 characters at most). Chrome writes regional variants as `pt_BR` here. This file is what makes the Chrome Web Store list the language.
+5. Run `npm run check`. It fails if a locale is missing from the manifest or from `_locales`, or if its keys differ from `en.js`.
 
 A regional variant is used when it matches YouTube's language exactly. Otherwise the base language applies (`es-419` uses `es`).
 

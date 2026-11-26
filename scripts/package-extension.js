@@ -7,7 +7,7 @@ const { spawnSync } = require('node:child_process');
 const projectRoot = path.resolve(__dirname, '..');
 const archiveName = 'subtil-controls-for-youtube.zip';
 const archivePath = path.join(projectRoot, archiveName);
-const extensionFiles = ['manifest.json', 'src', 'icons', 'LICENSE'];
+const extensionFiles = ['manifest.json', '_locales', 'src', 'icons', 'LICENSE'];
 
 function runZip(arguments_) {
   const result = spawnSync('zip', arguments_, {
