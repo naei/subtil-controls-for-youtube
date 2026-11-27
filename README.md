@@ -6,9 +6,9 @@
 
 Chrome extension that adds an audio-only mode and a loop button directly to the YouTube playback bar.
 
-<img src=".github/screenshots/promo.png" width="440" alt="Subtil Controls for YouTube: the Loop and Audio only buttons in the playback bar">
+<img src=".github/screenshots/promo-440x280.png" width="440" alt="Subtil Controls for YouTube: the Loop and Audio only buttons in the playback bar">
 
-![A YouTube video playing in audio-only mode, showing its thumbnail and an Audio only badge](.github/screenshots/02-audio-only.jpg)
+![A YouTube video playing in audio-only mode, showing its thumbnail and an Audio only badge](.github/screenshots/video-off.jpg)
 
 The two buttons sit right before Settings and look like YouTube's own controls. There is nothing to configure: clicking the toolbar icon only shows a short reminder of where the buttons are.
 
@@ -22,7 +22,7 @@ The interface is available in English, French, and Spanish, following the langua
 
 Click the eye button to stop the video stream and keep listening. The player shows the video thumbnail and keeps the controls you know: play, seek, volume, speed, theater mode, and fullscreen. Click again to bring the video back at the same position.
 
-![The audio-only button in the YouTube playback bar with its Turn off video stream tooltip](.github/screenshots/01-player-button.jpg)
+![The audio-only button in the YouTube playback bar with its Turn off video stream tooltip](.github/screenshots/video-on.jpg)
 
 This is not a hidden `<video>` element or a switch to 144p. The video pipeline is replaced by YouTube's own audio player, so nothing keeps downloading, decoding, or rendering video in the background.
 
@@ -34,7 +34,7 @@ Click the loop button to replay the current video indefinitely. Looping follows 
 
 Both buttons follow the size, weight, and tooltips of YouTube's own controls. The eye is struck through while audio-only mode is on, and the loop arrows close into a full loop while looping is on.
 
-<img src=".github/screenshots/03-toolbar.jpg" width="440" alt="Close-up of the playback bar with loop and audio-only mode active">
+<img src=".github/screenshots/playback-bar.jpg" width="440" alt="Close-up of the playback bar with loop and audio-only mode active">
 
 ### Private by design
 
